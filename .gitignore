@@ -4,3 +4,6 @@
 .DS_Store
 insight_testsuite/results.txt
 insight_testsuite/temp
+
+# Python IDE
+.idea
