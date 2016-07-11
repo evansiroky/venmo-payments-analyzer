@@ -7,3 +7,6 @@ insight_testsuite/temp
 
 # Python IDE
 .idea
+
+# PyTest
+cache
