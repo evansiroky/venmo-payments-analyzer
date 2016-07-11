@@ -44,6 +44,9 @@ class Transaction:
         self.target = data['target']
         self.actor = data['actor']
 
+    def __str__(self):
+        return '{0} <> {1} @ {2}'.format(self.actor, self.target, self.time)
+
 
 def insert(insert_transaction, prev_transaction, next_transaction, first_transaction):
     """ Insert a transaction into the linked list.
@@ -126,7 +129,7 @@ def process(in_file, out_file):
         elif (window_end - new_transaction.time).seconds > 60:
             # transaction is prior to current 60 second window
             # do not add transaction to graph
-            # print last known median
+            # output last known median
             output = output_append(output, last_median)
             # continue to next transaction immediately
             continue
@@ -136,6 +139,7 @@ def process(in_file, out_file):
         # - delete transactions outside 60 second window
         # - insert the new transaction at the appropriate place
         # - tally up the number of transactions each person is involved with
+        # - make sure the transaction is not duplicate (and keep only the most recent duplicate if it is)
 
         # initialize vertex degree counter with data from new_transaction
         payments = Counter()
@@ -145,7 +149,13 @@ def process(in_file, out_file):
         # initialize values for iterating through previous transactions
         cur_transaction = first_transaction
         last_transaction = None
-        inserted = False
+
+        # initialize variables related to inserting and duplicate handling
+        duplicate_found = False
+        should_insert = True
+        found_insertion_point = False
+        insert_before = None  # placeholder for transaction to insert after
+        insert_after = None  # placeholder for transaction to insert before
 
         while cur_transaction:
 
@@ -157,17 +167,59 @@ def process(in_file, out_file):
 
             else:
                 # transaction inside window
-                # add vertex degree tally data
-                payments[cur_transaction.target] += 1
-                payments[cur_transaction.actor] += 1
 
-                #  check if time is appropriate to insert new_transaction
-                if not inserted and cur_transaction.time >= new_transaction.time:
-                    # insert here to maintain order by time
-                    first_transaction = insert(new_transaction, last_transaction, cur_transaction, first_transaction)
+                # determine if current transaction involves target-actor combo of new transaction
+                if (cur_transaction.target == new_transaction.target and \
+                        cur_transaction.actor == new_transaction.actor) or \
+                    (cur_transaction.actor == new_transaction.target and \
+                        cur_transaction.target == new_transaction.actor):
+                    # transaction connection already present in graph
+                    duplicate_found = True
 
-                    # note insertion
-                    inserted = True
+                    # keep transaction if it is later than new transaction
+                    if cur_transaction.time >= new_transaction.time:
+                        # current transaction should stay in graph
+                        # no insertion necessary, exit loop
+                        should_insert = False
+                        break
+                    else:
+                        # current transaction occurred prior to new transaction
+                        # remove current transaction from linked list
+                        cur_transaction = cur_transaction.next
+
+                        # update point of last or first transaction
+                        if last_transaction:
+                            last_transaction.next = cur_transaction
+                        else:
+                            first_transaction = cur_transaction
+
+                        # handle edge case of removing transaction at end of list
+                        if not cur_transaction:
+                            insert_before = last_transaction
+                            break
+
+                        # continue to next step in loop since update step has been performed
+                        continue
+
+                else:
+
+                    # transaction connection not duplicate
+                    # add vertex degree tally data
+                    payments[cur_transaction.target] += 1
+                    payments[cur_transaction.actor] += 1
+
+                    #  check if time is appropriate to insert new_transaction
+                    if not found_insertion_point and cur_transaction.time >= new_transaction.time:
+                        # note insert point (a duplicate transaction might appear later, so don't insert yet)
+                        insert_before = last_transaction
+                        insert_after = cur_transaction
+
+                        # note insertion
+                        found_insertion_point = True
+
+                        # end loop early if duplicate already found in graph
+                        if duplicate_found:
+                            break
 
                 # since the current transaction is valid, replace the last transaction with this transaction
                 last_transaction = cur_transaction
@@ -175,20 +227,25 @@ def process(in_file, out_file):
             # increment to next transaction
             cur_transaction = cur_transaction.next
 
-        # after reaching end of list, make sure new_transaction was inserted
-        if not inserted:
-            first_transaction = insert(new_transaction, last_transaction, cur_transaction, first_transaction)
+        # after reaching end of list, insert transaction if needed
+        if should_insert:
+            # handle case when appending
+            insert_before = insert_before if found_insertion_point else last_transaction
+            # put into list
+            first_transaction = insert(new_transaction, insert_before, insert_after, first_transaction)
 
-        # calculated median vertex degree
-        vertex_degrees = payments.most_common()
-        n = len(vertex_degrees)
-        halfway = n / 2
-        if n % 2:
-            # odd number of vertexes
-            last_median = vertex_degrees[halfway][1]
-        else:
-            # even number of vertexes
-            last_median = (vertex_degrees[halfway][1] + vertex_degrees[halfway - 1][1]) / 2.0
+        # only recalculate median if duplicate not found
+        if not duplicate_found:
+            # calculated median vertex degree
+            vertex_degrees = payments.most_common()
+            n = len(vertex_degrees)
+            halfway = n / 2
+            if n % 2:
+                # odd number of vertexes
+                last_median = vertex_degrees[halfway][1]
+            else:
+                # even number of vertexes
+                last_median = (vertex_degrees[halfway][1] + vertex_degrees[halfway - 1][1]) / 2.0
 
         output = output_append(output, last_median)
 

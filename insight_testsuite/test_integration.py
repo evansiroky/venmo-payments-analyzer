@@ -24,7 +24,6 @@ class TestMedianCalculation(unittest.TestCase):
         # gather tests
         test_data_dirs = './insight_testsuite/tests'
         for test_folder in os.listdir(test_data_dirs):
-            print(test_folder)
             in_filename = os.path.join(test_data_dirs, test_folder, 'venmo_input', 'venmo-trans.txt')
             out_filename = os.path.join(self.temp_folder, 'output.txt')
             expected_output_filename = os.path.join(test_data_dirs, test_folder, 'venmo_output', 'output.txt')
@@ -36,6 +35,7 @@ class TestMedianCalculation(unittest.TestCase):
 
             actual_iterator = iter(actual_out_file)
             expected_iterator = iter(expected_output_file)
+            line_no = 1
 
             try:
 
@@ -57,7 +57,10 @@ class TestMedianCalculation(unittest.TestCase):
                     except StopIteration:
                         raise Exception('End of file found in actual output, but expected output still has more data.')
 
-                    assert(expected_line == actual_line)
+                    assert expected_line.strip() == actual_line.strip(), \
+                        'incorrect median on line {0} in {1}'.format(line_no, test_folder)
+
+                    line_no += 1
 
             finally:
 

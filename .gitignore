@@ -10,3 +10,5 @@ insight_testsuite/temp
 
 # PyTest
 cache
+htmlcov
+.coverage
