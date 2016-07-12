@@ -33,36 +33,32 @@ class TestMedianCalculation(unittest.TestCase):
             actual_out_file = open(out_filename)
             expected_output_file = open(expected_output_filename)
 
-            actual_iterator = iter(actual_out_file)
-            expected_iterator = iter(expected_output_file)
-            line_no = 1
+            actual_lines = actual_out_file.readlines()
+            expected_lines = expected_output_file.readlines()
+            line_no = 0
 
-            try:
+            actual_out_file.close()
+            expected_output_file.close()
 
-                while True:
+            while True:
+                try:
+                    actual_line = actual_lines[line_no]
+                except IndexError:
+                    # reached end of actual data, expect should also throw same exception
                     try:
-                        actual_line = actual_iterator.next()
-                    except StopIteration:
-                        # reached end of actual data, expect should also throw same exception
-                        try:
-                            expected_line = expected_iterator.next()
-                            raise Exception('End of file found in expected output, but actual output still has more data.')
-                        except StopIteration:
-                            pass
+                        expected_line = expected_lines[line_no]
+                        raise Exception('End of file found in expected output, but actual output still has more data.')
+                    except IndexError:
+                        pass
 
-                        break
+                    break
 
-                    try:
-                        expected_line = expected_iterator.next()
-                    except StopIteration:
-                        raise Exception('End of file found in actual output, but expected output still has more data.')
+                try:
+                    expected_line = expected_lines[line_no]
+                except IndexError:
+                    raise Exception('End of file found in actual output, but expected output still has more data.')
 
-                    assert expected_line.strip() == actual_line.strip(), \
-                        'incorrect median on line {0} in {1}'.format(line_no, test_folder)
+                assert expected_line.strip() == actual_line.strip(), \
+                    'incorrect median on line {0} in {1}'.format(line_no, test_folder)
 
-                    line_no += 1
-
-            finally:
-
-                actual_out_file.close()
-                expected_output_file.close()
+                line_no += 1

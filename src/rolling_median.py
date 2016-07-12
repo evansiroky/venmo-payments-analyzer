@@ -246,7 +246,7 @@ def process(in_file, out_file):
             # calculated median vertex degree
             vertex_degrees = payments.most_common()
             n = len(vertex_degrees)
-            halfway = n / 2
+            halfway = int(n / 2)
             if n % 2:
                 # odd number of vertexes
                 last_median = vertex_degrees[halfway][1]
