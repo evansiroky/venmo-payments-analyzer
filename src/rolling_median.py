@@ -120,7 +120,14 @@ def process(in_file, out_file):
 
     for line in f:
         # process a new transaction
-        new_transaction = Transaction(line)
+        try:
+            new_transaction = Transaction(line)
+        except ValueError:
+            # invalid input line, skip current line
+            continue
+        except KeyError:
+            # one or more json fields are missing, skip current line
+            continue
 
         if not window_end or new_transaction.time > window_end:
             # first transaction or new end of 60 second window
