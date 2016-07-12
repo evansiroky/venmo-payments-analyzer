@@ -22,8 +22,8 @@ The script requires the input file to exist.  The input file must be a plain tex
 
 | Key | Description |
 | --- | --- |
-| actor | A case-sensitive string representing the ID of the actor in the transaction. |
-| target | A case-sensitive string representing the ID of the target in the transaction. |
+| actor | A case-sensitive, non-empty string representing the ID of the actor in the transaction. |
+| target | A case-sensitive, non-empty string representing the ID of the target in the transaction. |
 | created_time | A string of the exact time in UTC of the transaction.  It must be in the format `YYYY-MM-DDTHH:MM:SSZ`.  Timezones other than "Z" are assumed invalid while parsing the data. |
 
 Any lines that have either invalid JSON, missing keys or imporperly formatted date strings will be skipped in the analysis.

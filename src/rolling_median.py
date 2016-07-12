@@ -44,6 +44,9 @@ class Transaction:
         self.target = data['target']
         self.actor = data['actor']
 
+        if self.target == '' or self.actor == '':
+            raise ValueError
+
 
 def insert(insert_transaction, prev_transaction, next_transaction, first_transaction):
     """ Insert a transaction into the linked list.
