@@ -44,9 +44,6 @@ class Transaction:
         self.target = data['target']
         self.actor = data['actor']
 
-    def __str__(self):
-        return '{0} <> {1} @ {2}'.format(self.actor, self.target, self.time)
-
 
 def insert(insert_transaction, prev_transaction, next_transaction, first_transaction):
     """ Insert a transaction into the linked list.
@@ -109,7 +106,8 @@ def process(in_file, out_file):
     """
 
     if not os.path.exists(in_file):
-        raise Exception('Input file does not exist: ' + in_file)
+        print('Input file does not exist!')
+        return
 
     first_transaction = None  # store transactions as linked list for fast insertions and deletions
     window_end = None  # current end of 60 second window
@@ -271,4 +269,8 @@ def process(in_file, out_file):
 
 if __name__ == "__main__":
     # receive arguments from command line and send to process function
-    process(sys.argv[1], sys.argv[2])
+    if len(sys.argv) != 3:
+        print('Invalid command!')
+        print('Usage: rolling_median.py input_path output_path')
+    else:
+        process(sys.argv[1], sys.argv[2])
